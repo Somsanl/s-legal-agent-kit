@@ -65,7 +65,9 @@ class BridgeAndKitTests(unittest.TestCase):
     def test_plugin_manifests_and_skills_valid(self):
         manifest = json.loads((PLUGIN_DIR / "plugin.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["name"], "slegal")
-        self.assertEqual(manifest["version"], "1.0.0")
+        self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")
+        version_tuple = tuple(int(part) for part in manifest["version"].split("."))
+        self.assertGreaterEqual(version_tuple, (1, 1, 0))
         self.assertEqual(manifest["homepage"], "https://github.com/Somsanl/s-legal-agent-kit")
         self.assertEqual(manifest["repository"], "https://github.com/Somsanl/s-legal-agent-kit")
         self.assertLessEqual(len(manifest["suggestedPrompts"]), 3)

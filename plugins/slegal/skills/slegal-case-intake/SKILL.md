@@ -59,6 +59,8 @@ description: Open, update, and verify S-Legal case files and non-litigation lega
   - การเติมข้อมูลว่าง (เลขบัตร ที่อยู่ เบอร์โทร กรรมการ หรือเพิ่มคู่ความต่อท้าย) บันทึกได้ทันที
   - การแก้ชื่อ/คำนำหน้า, เปลี่ยน `partyType`, สลับ `sideOrdinal`, เปลี่ยน `isOurClient`, แก้สถานะพิเศษ หรือลบคู่ความ: เรียกด้วย `confirmSensitiveDiff: false` ก่อน -> แสดงตาราง **`เดิม vs ใหม่`** ให้ผู้ใช้ยืนยัน -> เมื่อผู้ใช้ตกลงจึงเรียกซ้ำด้วย `confirmSensitiveDiff: true` และ `idempotencyKey` ใหม่
 
+> **เครื่องมือเสริมที่ใช้คู่กับการตั้งแฟ้ม**: ใช้ `slegal_case_snapshot_get` เพื่อตรวจภาพรวมสำนวนครบใบเดียว (ซ่อนยอดค่าบริการอัตโนมัติสำหรับสิทธิ์ทนายทั่วไป), ใช้ `slegal_case_document_list` / `slegal_case_document_upload` เพื่อดูและอัปโหลดเอกสารเข้าคลังสำนวน, และใช้ `slegal_court_service_fee_lookup` เพื่อเช็กอัตราค่านำหมาย/ส่งหมายข้ามเขตของ 262 ศาลตามที่อยู่คู่ความ (ดูรายละเอียดในสกิล `slegal-work-tracker`)
+
 ### Step 4: บันทึกแฟ้มและรายงานผล (`slegal_case_upsert_with_parties`)
 
 1. เรียก `slegal_case_upsert_with_parties` พร้อม `idempotencyKey`

@@ -7,7 +7,7 @@ description: Create, search, update, issue, and cancel S-Legal company Quotation
 
 จัดการเอกสารการค้าของสำนักงาน (ใบเสนอราคา `QT`/`MBA`, ใบแจ้งหนี้ `INV`) และการตั้งเบิกค่าใช้จ่ายพนักงาน/ค่าใช้จ่ายสำนวน (`EC` หน้า `/accounting/employee-claims`) ผ่าน **S-Legal MCP** ตามกฎความถูกต้องทางบัญชี ภาษีมูลค่าเพิ่ม (`VAT`) ภาษีหัก ณ ที่จ่าย (`WHT`) และ Optimistic Concurrency (`expectedUpdatedAt`)
 
-> สำหรับงานบัญชีขั้นสูงที่อยู่นอกเหนือ Live MCP ของระยะที่ 1 (เช่น `RC` ใบเสร็จรับเงิน, `AP` เจ้าหนี้, `PV` ใบสำคัญจ่าย, 50 ทวิ / ภ.ง.ด.3-53, รอบจ่ายเงิน 10/25, ค่าตอบแทนทนาย, และงบทดลอง) ให้อ่านสกิล **`slegal-accounting-ops`**
+> สำหรับงานบัญชีหลักครบทั้ง 7 กลุ่มที่เปิดใช้งานจริงบน Production แล้ว (`34` เครื่องมือ: `RC` ใบเสร็จรับเงิน & PDF, `AP` เจ้าหนี้, `PV` ใบสำคัญจ่าย & สลิป, กระทบยอดธนาคาร, `50 ทวิ / ภ.ง.ด.3-53`, รอบจ่ายเงิน 10/25 & วางบิล `EXP`, ค่าตอบแทนทนาย, `Partner Ledger / OMEC`, และงบทดลอง/GL) ให้อ่านสกิล **`slegal-accounting-ops`**
 
 ## When to Read Bundled References
 

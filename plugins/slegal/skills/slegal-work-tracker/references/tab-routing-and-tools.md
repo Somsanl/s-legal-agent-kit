@@ -9,7 +9,7 @@
 
 ---
 
-## 2. ตารางสถานะคำสั่งศาล (`orderStatus`) สำหรับ `slegal_filing_update_order` / `slegal_filing_edit`
+## 2. ตารางสถานะคำสั่งศาล (`orderStatus`) สำหรับ `slegal_filing_update_order` / `slegal_filing_edit` / `slegal_filing_cancel`
 
 | ค่า `orderStatus` | ความหมายในระบบ | คิวติดตามคำสั่งศาลปิดจบหรือไม่ |
 |---|---|---|
@@ -19,23 +19,27 @@
 | `granted` | ศาลอนุญาตตามขอ | **ปิดจบคิวรอคำสั่ง** (สร้างงานถัดไปได้ผ่าน `createNextTaskTitle`) |
 | `partially_granted` | ศาลอนุญาตบางส่วน | **ปิดจบคิวรอคำสั่ง** |
 | `rejected` | ศาลยกคำร้อง / ไม่อนุญาต | **ปิดจบคิวรอคำสั่ง** |
-| `withdrawn` | ถอนคำร้อง | **ปิดจบคิวรอคำสั่ง** |
+| `withdrawn` | ถอนคำร้อง / ยกเลิกแบบ Soft-Cancel | **ปิดจบคิวรอคำสั่ง** |
 | `not_required` / `acknowledged` | รับทราบ / ไม่ต้องมีคำสั่งเพิ่มเติม | **ปิดจบคิวรอคำสั่ง** |
+
+- **การยกเลิกคำร้อง (`slegal_filing_cancel`)**: ใช้สำหรับรายการที่ยังไม่ชี้ขาดเด็ดขาด โดยส่ง `idempotencyKey`, `filingId`, `expectedUpdatedAt`, และ `reason` — ระบบทำ **Soft-Cancel เท่านั้น (zero hard delete)** และปิดงานติดตามที่ผูกอยู่ให้อัตโนมัติ
 
 ---
 
 ## 3. วิธีแนบไฟล์ PDF คำร้อง คำสั่งศาล หรือเอกสารสำนวน
 
-เครื่องมือ `slegal_filing_record`, `slegal_filing_edit`, `slegal_filing_update_order`, และ `slegal_filing_attach_pdf` รองรับการแนบไฟล์ได้ 3 วิธี:
-1. **ส่งพาธไฟล์บนเครื่อง (`pdfFilePath`)**: เมื่อใช้งานผ่าน Local MCP Bridge (`bridge.py`) บนเครื่องคอมพิวเตอร์ สะพานเชื่อมต่อจะอ่านไฟล์จากพาธที่ผู้ใช้ระบุและแนบให้โดยอัตโนมัติ (จำกัดขนาดไฟล์ตามเกณฑ์ความปลอดภัย ≤ 8 MB)
-2. **ส่ง `pdfBase64` + `pdfFileName`**: สำหรับไฟล์ PDF หรือรูปภาพขนาดเล็ก-กลางที่แปลงเป็น Base64 แล้ว
-3. **โหมดอัปโหลดไฟล์ใหญ่ (`preparePdfUpload: true` หรือ `prepareOnly: true`)**: ระบบจะคืน Signed Upload URL / คำแนะนำอัปโหลด เพื่อให้ส่งไฟล์ขึ้นพื้นที่จัดเก็บโดยตรง
+เครื่องมือ `slegal_filing_record`, `slegal_filing_edit`, `slegal_filing_update_order`, `slegal_filing_attach_pdf`, และ `slegal_case_document_upload` รองรับการแนบไฟล์อย่างปลอดภัย:
+1. **ส่งพาธไฟล์บนเครื่อง (`pdfFilePath`)**: สำหรับคำสั่ง `slegal_filing_*` เมื่อใช้งานผ่าน Local MCP Bridge (`bridge.py`) บนเครื่องคอมพิวเตอร์ สะพานเชื่อมต่อจะอ่านไฟล์จากพาธที่ผู้ใช้ระบุและแนบให้โดยอัตโนมัติ (จำกัดขนาดไฟล์ตามเกณฑ์ความปลอดภัย ≤ 8 MB)
+2. **ส่ง Base64 (`pdfBase64`+`pdfFileName` หรือ `fileBase64`+`fileName`+`mimeType`)**: สำหรับไฟล์ PDF หรือรูปภาพ (และ `.docx` ใน `slegal_case_document_upload` สูงสุด `10 MiB` พร้อมตรวจ MIME allow-list, malware scan และ SHA-256)
+3. **โหมดอัปโหลดไฟล์ใหญ่ (`preparePdfUpload: true` หรือ `prepareOnly: true`)**: ระบบจะคืน Signed Upload URL / คำแนะนำอัปโหลด เพื่อให้ส่งไฟล์ขึ้นพื้นที่จัดเก็บโดยตรงโดยไม่ผ่านขนาดข้อความ JSON
+
+- **การดูรายการเอกสารในสำนวน (`slegal_case_document_list`)**: ส่ง `caseId`, กรอง `documentType` / `search`, และแบ่งหน้า (`page`, `pageSize`) เพื่อดู metadata ของไฟล์ในคลัง `case_documents` และ `uiDownloadPath` (ซ่อน raw storage path)
 
 ---
 
-## 4. รายละเอียดการทำงานของ `slegal_court_schedule_upsert` และ Auto-Prep Task
+## 4. รายละเอียดการทำงานของ `slegal_court_schedule_upsert`, Auto-Prep Task & `slegal_hearing_record_outcome`
 
-- **พารามิเตอร์หลัก**:
+- **พารามิเตอร์หลักของ `slegal_court_schedule_upsert`**:
   - `caseId` (บังคับเมื่อลงนัดใหม่), `scheduleId` (ส่งเมื่อต้องการแก้ไขผลนัด เลื่อนวันนัด หรือยกเลิกนัดเดิม)
   - `action`: `"upsert"` (ค่าเริ่มต้น) หรือ `"cancel"`
   - `courtStage`: `"first"` (`ศาลชั้นต้น`), `"appeal"` (`ศาลอุทธรณ์`), `"supreme"` (`ศาลฎีกา`)
@@ -45,15 +49,25 @@
 - **การซิงค์อัตโนมัติ**:
   1. คำนวณวันนัดอนาคตที่ใกล้ที่สุดของสำนวนไปอัปเดต `next_action_at` และ `next_action_time` ของสำนวน
   2. ผูกงานเตรียมคดีด้วยตัวระบุ `[นัดศาล:<scheduleId>]` — หากทนายสั่งเลื่อนวันนัดใบเดิม (`scheduleId` เดิม) งานเตรียมคดีจะขยับ `dueAt` และ `followUpAt` ตามโดยไม่สร้างงานซ้ำ และหากสั่ง `action: "cancel"` งานเตรียมคดีจะถูกยกเลิก (`cancelled`) ตามทันที
+- **บันทึกผลหลังวันนัดแบบ Atomic (`slegal_hearing_record_outcome`)**:
+  - ส่ง `idempotencyKey`, `caseId`, `scheduleId`, `outcomeResult` และเลือกแนบ `redCaseNo`, `judgmentDate`, `nextHearing` (ลงนัดครั้งถัดไป + Auto-Prep Task), และ `followUpTask` ได้ในคำสั่งเดียว (Atomic transaction)
+  - ระบบปกป้องชั้นศาล/สถานะปิดคดีเดิมหากเป็นการบันทึกผลนัดย้อนหลัง และไม่ทับ `redCaseNo` เดิมที่แตกต่างโดยไม่ยืนยัน
 
 ---
 
-## 5. รายละเอียดการทำงานของ `slegal_appeal_status_get` & `slegal_appeal_extension_record`
+## 5. รายละเอียดการทำงานของ `slegal_appeal_status_get`, `slegal_appeal_deadline_upsert`, `slegal_appeal_extension_record`, `slegal_court_service_fee_lookup` & `slegal_case_snapshot_get`
 
 1. **ตรวจสถานะ (`slegal_appeal_status_get`)**:
    - ส่ง `caseId` เพื่อดูวันอ่านคำพิพากษา วันครบกำหนดอุทธรณ์/ฎีกาปัจจุบัน (`effectiveDueAt`) จำนวนวันที่เหลือ (`daysRemaining`) และประวัติคำร้องขอขยายทั้งหมดของสำนวน
    - ไม่ส่ง `caseId` เพื่อดูภาพรวมคดีที่ใกล้ครบกำหนดอุทธรณ์/ฎีกาทั้งสำนักงาน
-2. **บันทึกคำร้องขอขยาย (`slegal_appeal_extension_record`)**:
-   - สร้างครั้งที่ 1, 2, ... (`sequenceNo` รันให้อัตโนมัติ) โดยระบุ `caseId` (หรือ `deadlineId`), `deadlineType` (`"appeal"` | `"supreme"`), `judgmentDate` (กรณีสำนวนยังไม่มีฐานวันอ่านคำพิพากษา ระบบคำนวณกำหนด 1 เดือนตามกฎหมายให้ทันที), `requestedUntil`, `filedAt`, `reason`
-   - ระบบสร้างคำขอขยาย คำร้องติดตามคำสั่งศาล และงานในคิว `งานที่ต้องติดตาม` ให้อัตโนมัติ
-   - เมื่อศาลมีคำสั่งอนุญาต: เรียก `slegal_appeal_extension_record` ซ้ำโดยส่ง `extensionId`, `courtOrderStatus: "granted"`, และ `grantedUntil: "YYYY-MM-DD"` ระบบจะขยับกำหนดครบอายุของสำนวนไปเป็นวันใหม่และปิดคิวตามคำสั่งศาลให้ครบในคำสั่งเดียว
+2. **สร้าง/อัปเดตกำหนดอุทธรณ์-ฎีกา (`slegal_appeal_deadline_upsert`)**:
+   - รองรับ `deadlineType`: `"appeal" | "supreme" | "appeal_answer" | "supreme_answer"`, `caseLawType`: `"civil" | "criminal"`, `baseEventDate`, `serviceMethod`: `"direct" | "posted"`, `appealFiledAt`, `filingSide`, `filingPartyName`, `nextStageBlackCaseNo`
+   - บังคับตรวจ **Chronology Guard (`AppealFilingValidationError`: `appealFiledAt >= baseEventDate`)** และคำนวณวันทำการถัดไปตาม **ป.พ.พ. มาตรา 193/8** อัตโนมัติ
+3. **บันทึกคำร้องขอขยาย (`slegal_appeal_extension_record`)**:
+   - สร้างครั้งที่ 1, 2, ... (`sequenceNo` รันให้อัตโนมัติ) โดยระบุ `caseId` (หรือ `deadlineId`), `deadlineType` (`"appeal"` | `"supreme"`), `judgmentDate`, `requestedUntil`, `filedAt`, `reason`
+   - เมื่อศาลมีคำสั่งอนุญาต: เรียกซ้ำโดยส่ง `extensionId`, `courtOrderStatus: "granted"`, และ `grantedUntil: "YYYY-MM-DD"` ระบบจะขยับกำหนดครบอายุของสำนวนไปเป็นวันใหม่และปิดคิวตามคำสั่งศาลให้ครบในคำสั่งเดียว
+4. **ค้นหาค่าส่งหมาย 262 ศาล (`slegal_court_service_fee_lookup`)**:
+   - ส่ง `q`, `courtName`, `provName`, `amphurName`, `tambonName` (ระบบตัดคำนำหน้าพื้นที่ไทยให้อัตโนมัติ เช่น `กทม.`, `เขต`, `แขวง`, `อ.`, `ต.`) เพื่ออ่านอัตราค่านำหมาย/ส่งหมายข้ามเขตจาก `court_service_fee_rates`
+5. **ภาพรวมสำนวนครบใบเดียว (`slegal_case_snapshot_get`)**:
+   - ส่ง `caseId` (`includeCompletedTasks?`, `includePastHearings?`) เพื่อดึงข้อมูลคดี คู่ความ นัดศาล คำร้อง อุทธรณ์ งานค้าง และใบเสนอราคาในครั้งเดียว
+   - **QT Fee Privacy Gate**: หาก API Key ไม่มีสิทธิ์ `accounting.manage` / `case.finance.manage` / `*` ระบบจะคืนเฉพาะเลขที่ใบเสนอราคาและสถานะอนุมัติ โดยซ่อนตัวเลขค่าบริการ (`feeSummaryRedacted: true`) โดยอัตโนมัติ
