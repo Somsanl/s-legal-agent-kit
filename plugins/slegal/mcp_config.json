@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "slegal": {
+      "command": "python",
+      "args": [
+        "-X",
+        "utf8",
+        "~/.slegal/mcp/run-slegal-mcp.py"
+      ],
+      "env": {
+        "PYTHONUTF8": "1",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  }
+}

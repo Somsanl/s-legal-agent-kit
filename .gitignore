@@ -1,0 +1,20 @@
+# Local secrets and personal configuration (NEVER commit)
+api_key
+*.key
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# OS & editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.bak
+*.bak.*
+.cache/
+tmp/

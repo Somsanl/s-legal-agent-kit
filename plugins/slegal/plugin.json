@@ -1,0 +1,18 @@
+{
+  "name": "slegal",
+  "displayName": "S-Legal Workspace",
+  "version": "1.0.0",
+  "description": "ชุดสกิลและเครื่องมือมาตรฐานสำนักงานกฎหมาย S-Legal สำหรับทีมทนายความและทีมบัญชี (เปิดแฟ้มคดี คู่ความ งานติดตาม นัดศาล อุทธรณ์ คำคู่ความ ใบเสนอราคา ใบแจ้งหนี้ ตั้งเบิกค่าใช้จ่าย และมาตรฐานงานบัญชี/ภาษีไทย)",
+  "author": {
+    "name": "S-Legal",
+    "url": "https://github.com/Somsanl/s-legal-agent-kit"
+  },
+  "homepage": "https://github.com/Somsanl/s-legal-agent-kit",
+  "repository": "https://github.com/Somsanl/s-legal-agent-kit",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "เช็กงานที่ต้องติดตามรอบนี้ใน S-Legal และสรุปแยกตามความเร่งด่วน",
+    "เปิดแฟ้มงานใหม่ใน S-Legal พร้อมตรวจข้อมูลคู่ความก่อนบันทึก",
+    "ออกใบแจ้งหนี้ค่าที่ปรึกษากฎหมายรายเดือน หรือตรวจขั้นตอนตั้งเบิกค่าใช้จ่าย (EC) และ 50 ทวิ"
+  ]
+}
